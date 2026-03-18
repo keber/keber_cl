@@ -1,0 +1,25 @@
+name: Sync main to Bitbucket
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Bitbucket
+        env:
+          BITBUCKET_REPOWRITE_TOKEN: ${{ secrets.BITBUCKET_REPOWRITE_TOKEN }}
+        run: |
+          git remote add bitbucket "https://bitbucket.org/keberlabs/keber_cl.git"
+          git config credential.helper '!f() { echo "username=x-token-auth"; echo "password=$BITBUCKET_REPOWRITE_TOKEN"; }; f'
+          git push --force bitbucket main
