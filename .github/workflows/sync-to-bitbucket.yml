@@ -24,12 +24,22 @@ jobs:
           git push --force bitbucket main
 
       - name: Deploy to server via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          port: 22222
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            cd /opt/easyengine/sites/keber.cl/app/htdocs
-            git pull origin main
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          # Escribir la llave privada en un archivo temporal
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Agregar el host a known_hosts para evitar el prompt interactivo
+          ssh-keyscan -p 22222 "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Conectar y ejecutar git pull en el servidor
+          ssh -i ~/.ssh/deploy_key \
+              -p 22222 \
+              -o StrictHostKeyChecking=no \
+              "$DEPLOY_USER@$DEPLOY_HOST" \
+              "cd /opt/easyengine/sites/keber.cl/app/htdocs && git pull origin main"
