@@ -1,4 +1,4 @@
-name: Sync main to Bitbucket
+name: Sync main to Bitbucket and Deploy
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  sync:
+  sync-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,3 +22,13 @@ jobs:
         run: |
           git remote add bitbucket "https://keberflores:${BITBUCKET_REPOWRITE_TOKEN}@bitbucket.org/keberlabs/keber_cl.git"
           git push --force bitbucket main
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/easyengine/sites/keber.cl/app/htdocs
+            git pull origin main
