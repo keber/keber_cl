@@ -20,6 +20,5 @@ jobs:
         env:
           BITBUCKET_REPOWRITE_TOKEN: ${{ secrets.BITBUCKET_REPOWRITE_TOKEN }}
         run: |
-          git remote add bitbucket "https://bitbucket.org/keberlabs/keber_cl.git"
-          git config credential.helper '!f() { echo "username=x-token-auth"; echo "password=$BITBUCKET_REPOWRITE_TOKEN"; }; f'
+          git remote add bitbucket "https://keberflores:${BITBUCKET_REPOWRITE_TOKEN}@bitbucket.org/keberlabs/keber_cl.git"
           git push --force bitbucket main
