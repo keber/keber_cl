@@ -23,23 +23,26 @@ jobs:
           git remote add bitbucket "https://keberflores:${BITBUCKET_REPOWRITE_TOKEN}@bitbucket.org/keberlabs/keber_cl.git"
           git push --force bitbucket main
 
-      - name: Deploy to server via SSH
+      - name: Setup SSH key
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          # Escribir la llave privada en un archivo temporal
           mkdir -p ~/.ssh
-          echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          # printf preserva saltos de línea correctamente y el valor nunca
+          # aparece en logs porque GitHub Actions enmascara todos los secrets
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          # Agregar host a known_hosts para evitar prompt interactivo
+          ssh-keyscan -p 22222 "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
-          # Agregar el host a known_hosts para evitar el prompt interactivo
-          ssh-keyscan -p 22222 "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-
-          # Conectar y ejecutar git pull en el servidor
+      - name: Deploy to server via SSH
+        run: |
           ssh -i ~/.ssh/deploy_key \
               -p 22222 \
               -o StrictHostKeyChecking=no \
-              "$DEPLOY_USER@$DEPLOY_HOST" \
+              "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
               "cd /opt/easyengine/sites/keber.cl/app/htdocs && git pull origin main"
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
