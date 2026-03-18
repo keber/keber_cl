@@ -33,12 +33,12 @@ jobs:
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           # Agregar host a known_hosts para evitar prompt interactivo
-          ssh-keyscan -p 22222 "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -p ${{ secrets.DEPLOY_PORT }} "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Deploy to server via SSH
         run: |
           ssh -i ~/.ssh/deploy_key \
-              -p 22222 \
+              -p ${{ secrets.DEPLOY_PORT }} \
               -o StrictHostKeyChecking=no \
               "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
               "cd /opt/easyengine/sites/keber.cl/app/htdocs && git pull origin main"
