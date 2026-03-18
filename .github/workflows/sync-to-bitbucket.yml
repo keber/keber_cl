@@ -37,11 +37,11 @@ jobs:
 
       - name: Deploy to server via SSH
         run: |
+          # en el servidor, authorized_keys tiene command= para ejecutar script específico que hace git pull
           ssh -i ~/.ssh/deploy_key \
               -p ${{ secrets.DEPLOY_PORT }} \
-              -o StrictHostKeyChecking=no \
-              "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-              "cd /opt/easyengine/sites/keber.cl/app/htdocs && git pull origin main"
+              -o StrictHostKeyChecking=yes \
+              "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" 
 
       - name: Cleanup SSH key
         if: always()
